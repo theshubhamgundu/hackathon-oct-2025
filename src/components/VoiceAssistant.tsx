@@ -271,80 +271,131 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
   };
 
   const speak = async (text: string) => {
-    if (!synthRef.current) return;
+    try {
+      if (!synthRef.current) {
+        console.error('Speech synthesis not supported or initialized');
+        return;
+      }
 
-    // Cancel any ongoing speech
-    synthRef.current.cancel();
+      console.log('Speaking text:', text, 'in language:', selectedLanguage.speechCode);
+      
+      // Cancel any ongoing speech
+      synthRef.current.cancel();
 
-    // Ensure voices are loaded
-    let voices = synthRef.current.getVoices();
-    if (voices.length === 0) {
-      // If voices aren't loaded yet, wait for them to load
-      await new Promise<void>((resolve) => {
-        const onVoicesChanged = () => {
-          voices = synthRef.current?.getVoices() || [];
-          if (voices.length > 0) {
+      // Ensure voices are loaded
+      let voices = synthRef.current.getVoices();
+      console.log('Available voices:', voices);
+      
+      if (voices.length === 0) {
+        console.log('No voices found, waiting for voices to load...');
+        // If voices aren't loaded yet, wait for them to load
+        await new Promise<void>((resolve) => {
+          const onVoicesChanged = () => {
+            const newVoices = synthRef.current?.getVoices() || [];
+            console.log('Voices changed, found:', newVoices.length, 'voices');
+            if (newVoices.length > 0) {
+              synthRef.current?.removeEventListener('voiceschanged', onVoicesChanged);
+              voices = newVoices;
+              resolve();
+            }
+          };
+          
+          synthRef.current?.addEventListener('voiceschanged', onVoicesChanged);
+          
+          // Some browsers don't fire the voiceschanged event, so set a timeout
+          setTimeout(() => {
+            const timeoutVoices = synthRef.current?.getVoices() || [];
+            console.log('Voices loaded after timeout:', timeoutVoices.length);
+            if (timeoutVoices.length > 0) {
+              voices = timeoutVoices;
+            }
             synthRef.current?.removeEventListener('voiceschanged', onVoicesChanged);
             resolve();
-          }
-        };
-        synthRef.current?.addEventListener('voiceschanged', onVoicesChanged);
-        // Some browsers don't fire the voiceschanged event, so set a timeout
-        setTimeout(resolve, 1000);
+          }, 2000);
+        });
+      }
+
+      const utterance = new SpeechSynthesisUtterance(text);
+      utterance.lang = selectedLanguage.speechCode;
+      utterance.rate = 0.9;
+      utterance.pitch = 1;
+      utterance.volume = 1;
+
+      // Log available voices for debugging
+      console.log('All available voices:', voices);
+      console.log('Looking for voice matching language code:', selectedLanguage.code, 'or speech code:', selectedLanguage.speechCode);
+
+      // Try to find a voice that matches the selected language
+      const languageCode = selectedLanguage.code.toLowerCase();
+      const speechCode = selectedLanguage.speechCode.toLowerCase();
+      
+      // First try exact match with speech code (e.g., 'te-IN')
+      let preferredVoice = voices.find(voice => {
+        const voiceLang = voice.lang.toLowerCase();
+        console.log('Checking voice:', voice.name, 'with lang:', voiceLang);
+        return voiceLang === speechCode;
       });
-      voices = synthRef.current?.getVoices() || [];
-    }
 
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = selectedLanguage.speechCode;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-    utterance.volume = 1;
+      // If not found, try matching just the language code (e.g., 'te')
+      if (!preferredVoice) {
+        console.log('No exact match, trying language code match...');
+        preferredVoice = voices.find(voice => {
+          const voiceLang = voice.lang.toLowerCase();
+          return voiceLang.startsWith(languageCode + '-') || voiceLang === languageCode;
+        });
+      }
 
-    // Try to find a voice that matches the selected language
-    const languageCode = selectedLanguage.code.toLowerCase();
-    const speechCode = selectedLanguage.speechCode.toLowerCase();
-    
-    // First try exact match with speech code (e.g., 'te-IN')
-    let preferredVoice = voices.find(voice => 
-      voice.lang.toLowerCase() === speechCode
-    );
+      // If still not found, try any voice that includes the language code
+      if (!preferredVoice) {
+        console.log('No language code match, trying partial match...');
+        preferredVoice = voices.find(voice => 
+          voice.lang.toLowerCase().includes(languageCode)
+        );
+      }
 
-    // If not found, try matching just the language code (e.g., 'te')
-    if (!preferredVoice) {
-      preferredVoice = voices.find(voice => 
-        voice.lang.toLowerCase().startsWith(languageCode + '-') ||
-        voice.lang.toLowerCase() === languageCode
-      );
-    }
+      // If we found a matching voice, use it
+      if (preferredVoice) {
+        utterance.voice = preferredVoice;
+        console.log('Using voice:', preferredVoice.name, 'for language:', selectedLanguage.name, 
+                   'voice lang:', preferredVoice.lang);
+      } else {
+        console.warn('No matching voice found for language:', selectedLanguage.name, 
+                    'Using default voice for:', utterance.lang);
+        // Try to use the first available voice if none matched
+        if (voices.length > 0) {
+          utterance.voice = voices[0];
+          console.log('Falling back to first available voice:', voices[0].name);
+        }
+      }
 
-    // If still not found, try any voice that includes the language code
-    if (!preferredVoice) {
-      preferredVoice = voices.find(voice => 
-        voice.lang.toLowerCase().includes(languageCode)
-      );
-    }
+      utterance.onend = () => {
+        console.log('Speech synthesis ended');
+        setIsSpeaking(false);
+      };
 
-    // If we found a matching voice, use it
-    if (preferredVoice) {
-      utterance.voice = preferredVoice;
-      console.log('Using voice:', preferredVoice.name, 'for language:', preferredVoice.lang);
-    } else {
-      console.warn('No matching voice found for language:', selectedLanguage.name, 
-                  'Using default voice for:', utterance.lang);
-    }
+      utterance.onerror = (event) => {
+        console.error('Speech synthesis error:', event);
+        setIsSpeaking(false);
+      };
 
-    utterance.onend = () => {
+      utterance.onboundary = (event) => {
+        console.log('Speech boundary:', event);
+      };
+
+      console.log('Starting speech with utterance:', {
+        text,
+        lang: utterance.lang,
+        voice: utterance.voice?.name || 'default',
+        rate: utterance.rate,
+        pitch: utterance.pitch
+      });
+
+      setIsSpeaking(true);
+      synthRef.current.speak(utterance);
+    } catch (error) {
+      console.error('Error in speak function:', error);
       setIsSpeaking(false);
-    };
-
-    utterance.onerror = (event) => {
-      console.error('Speech synthesis error:', event);
-      setIsSpeaking(false);
-    };
-
-    setIsSpeaking(true);
-    synthRef.current.speak(utterance);
+    }
   };
 
   const toggleListening = () => {
@@ -379,8 +430,8 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
       speak(lastCommand);
     }
   };
-  };
 
+  // Render the appropriate UI based on state
   if (!isSupported) {
     return (
       <div className="fixed bottom-4 right-4 z-50">

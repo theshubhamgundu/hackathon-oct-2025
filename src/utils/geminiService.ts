@@ -1,94 +1,108 @@
-let GEMINI_API_KEY = '';
+// ==========================
+// 🧩 JanAI Civic Companion
+// Powered by Groq (LLaMA 3.3 70B)
+// ==========================
 
-const initializeGemini = (): string => {
-  if (GEMINI_API_KEY) return GEMINI_API_KEY;
+let GROQ_API_KEY = '';
 
-  GEMINI_API_KEY = (import.meta.env?.VITE_GEMINI_API_KEY || '').trim();
-  if (!GEMINI_API_KEY) {
-    const userKey = prompt('Enter your Gemini API key (starts with AIza)');
-    if (!userKey) throw new Error('Gemini API key required.');
-    GEMINI_API_KEY = userKey.trim();
+// ✅ Initialize Groq API Key
+const initializeGroq = (): string => {
+  if (GROQ_API_KEY) return GROQ_API_KEY;
+
+  GROQ_API_KEY = (import.meta.env?.VITE_GROQ_API_KEY || '').trim();
+  if (!GROQ_API_KEY) {
+    const userKey = prompt('Enter your Groq API key (starts with gsk_)');
+    if (!userKey) throw new Error('Groq API key required.');
+    GROQ_API_KEY = userKey.trim();
   }
 
-  console.log('✅ Gemini API key initialized');
-  return GEMINI_API_KEY;
+  console.log('✅ Groq API key initialized');
+  return GROQ_API_KEY;
 };
 
-// Call backend proxy for Groq API (ensures proper routing)
-const callGroq = async (prompt: string): Promise<string> => {
-  try {
-    // First ensure API key is initialized
-    initializeGemini();
+// ==========================
+// 🧠 Token Estimator Utility
+// ==========================
+const estimateTokens = (text: string): number => {
+  // Rough estimation: 1 token ≈ 4 chars in English
+  return Math.ceil(text.length / 4);
+};
 
-    // Call backend proxy endpoint
+// ==========================
+// 🔁 Groq API Caller
+// ==========================
+const callGroq = async (prompt: string, retries = 3): Promise<string> => {
+  try {
+    initializeGroq();
+
+    const tokenCount = estimateTokens(prompt);
+    const MAX_SAFE_TOKENS = 3500; // soft limit per call to stay below 12k TPM
+    if (tokenCount > MAX_SAFE_TOKENS) {
+      console.warn(`⚠️ Trimming long prompt (${tokenCount} tokens > ${MAX_SAFE_TOKENS})`);
+      prompt = prompt.slice(0, MAX_SAFE_TOKENS * 4); // trim chars safely
+    }
+
     const response = await fetch('/api/groq/generate', {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({
+        prompt,
+        max_tokens: 512, // limit AI response
+        temperature: 0.7,
+      }),
     });
 
-    // Check status first before parsing JSON
+    if (response.status === 429 && retries > 0) {
+      console.warn(`⏳ Rate limited — retrying in 6s (${3 - retries + 1}/3)...`);
+      await new Promise(res => setTimeout(res, 6000));
+      return callGroq(prompt, retries - 1);
+    }
+
     if (!response.ok) {
-      let errorMessage = `HTTP ${response.status}`;
-      try {
-        const errorData = await response.json();
-        errorMessage = errorData.error || errorData.message || errorMessage;
-      } catch (parseErr) {
-        // If JSON parsing fails, try to get text
-        try {
-          const errorText = await response.text();
-          errorMessage = errorText || errorMessage;
-        } catch (textErr) {
-          // If all else fails, use status code
-        }
-      }
-      throw new Error(errorMessage);
+      const text = await response.text();
+      throw new Error(`HTTP ${response.status}: ${text}`);
     }
 
-    // Parse successful response
-    let data;
-    try {
-      data = await response.json();
-    } catch (parseErr) {
-      console.error('Failed to parse response:', parseErr);
-      const responseText = await response.text();
-      throw new Error(`Invalid response from server: ${responseText.substring(0, 100)}`);
-    }
-
-    if (!data.text) {
-      throw new Error('No text in response from AI');
-    }
+    const data = await response.json();
+    if (!data.text) throw new Error('No text in response from AI');
 
     console.log(`✅ Using model: ${data.model}`);
-    return data.text;
+    console.log(`📊 Estimated prompt tokens: ${tokenCount}`);
+    console.log(`📦 AI response tokens: ~${estimateTokens(data.text)}`);
+
+    return data.text.trim();
+
   } catch (err: any) {
     console.error('Groq proxy error:', err);
     throw new Error(`Failed to get AI response: ${err.message}`);
   }
 };
 
+// ==========================
+// 🤖 JanAI Class
+// ==========================
 class GeminiCivicCompanion {
   private conversationHistory: Array<{ role: string; content: string }> = [];
-  private model: any = null;
 
   private systemPrompt = `
 You are JanAI – India's civic-tech assistant.
-You help citizens understand government documents, find schemes, and file complaints.
-Use clear, simple, and empathetic language.
-If explaining complex forms or laws, break them into steps or plain English.
+Your goal is to respond clearly, briefly, and empathetically.
+Use plain, simple English or the user's language.
+Never exceed 120 words.
+Summarize and guide users through steps when explaining.
 `;
 
   async sendMessage(userMessage: string): Promise<string> {
     try {
       this.conversationHistory.push({ role: 'user', content: userMessage });
-      
-      const conversationContext = this.conversationHistory.map(
-        (msg) => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`
-      ).join('\n\n');
+
+      const conversationContext = this.conversationHistory
+        .slice(-5) // only keep last 5 turns to save tokens
+        .map(msg => `${msg.role === 'user' ? 'User' : 'Assistant'}: ${msg.content}`)
+        .join('\n\n');
 
       const prompt = `${this.systemPrompt}\n\n${conversationContext}`;
-      
-      // Use Groq API via backend proxy
+
       const response = await callGroq(prompt);
 
       this.conversationHistory.push({ role: 'assistant', content: response });
