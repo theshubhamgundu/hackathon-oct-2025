@@ -1,9 +1,41 @@
 import { GoogleGenerativeAI } from '@google/generative-ai';
 
 // Initialize Gemini AI - using environment variable
-const GEMINI_API_KEY = import.meta.env.VITE_GEMINI_API_KEY || 'AIzaSyDyWxedxF8CNO8kYWTfqr8ikb7X2IqXQkw';
+let GEMINI_API_KEY = '';
+let genAI: GoogleGenerativeAI | null = null;
 
-const genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+// Get API key from environment or prompt user
+const initializeGemini = (): GoogleGenerativeAI => {
+  if (genAI && GEMINI_API_KEY) {
+    return genAI;
+  }
+
+  // Try to get from environment
+  const envKey = (import.meta.env as any).VITE_GEMINI_API_KEY || '';
+  
+  if (envKey && envKey.trim()) {
+    GEMINI_API_KEY = envKey.trim();
+    genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+    console.log('✅ Gemini API initialized from environment');
+    return genAI;
+  }
+  
+  // Fallback: prompt user to provide API key
+  const userKey = prompt(
+    '🔑 Please enter your Google Gemini API key\n\n' +
+    'Get it free from: https://makersuite.google.com/app/apikey\n\n' +
+    'Your key should start with "AIza"'
+  );
+  
+  if (!userKey || !userKey.trim()) {
+    throw new Error('API key is required. Get one from https://makersuite.google.com/app/apikey');
+  }
+  
+  GEMINI_API_KEY = userKey.trim();
+  genAI = new GoogleGenerativeAI(GEMINI_API_KEY);
+  console.log('✅ Gemini API initialized from user input');
+  return genAI;
+};
 
 export interface ConversationMessage {
   role: 'user' | 'assistant';
@@ -12,7 +44,7 @@ export interface ConversationMessage {
 
 class GeminiCivicCompanion {
   private conversationHistory: ConversationMessage[] = [];
-  private model = genAI.getGenerativeModel({ model: 'gemini-pro' });
+  private model: any = null;
 
   private systemPrompt = `You are an expert Civic Life Companion AI assistant for Indian citizens. Your role is to:
 
@@ -42,6 +74,29 @@ When analyzing documents:
 
   async sendMessage(userMessage: string): Promise<string> {
     try {
+      // Initialize model if not already done
+      if (!this.model) {
+        const ai = initializeGemini();
+        // Use gemini-1.5-flash (free tier model) or fallback to gemini-pro
+        const models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro'];
+        let modelInitialized = false;
+        
+        for (const modelName of models) {
+          try {
+            this.model = ai.getGenerativeModel({ model: modelName });
+            console.log(`✅ Using model: ${modelName}`);
+            modelInitialized = true;
+            break;
+          } catch (e) {
+            console.log(`⚠️ Model ${modelName} not available, trying next...`);
+          }
+        }
+        
+        if (!modelInitialized) {
+          throw new Error('No compatible Gemini model available. Please check your API key.');
+        }
+      }
+
       // Add user message to history
       this.conversationHistory.push({
         role: 'user',
@@ -75,6 +130,29 @@ When analyzing documents:
 
   async analyzeDocument(documentContent: string, fileName: string): Promise<string> {
     try {
+      // Initialize model if not already done
+      if (!this.model) {
+        const ai = initializeGemini();
+        // Use gemini-1.5-flash (free tier model) or fallback to gemini-pro
+        const models = ['gemini-1.5-flash', 'gemini-pro', 'gemini-1.5-pro'];
+        let modelInitialized = false;
+        
+        for (const modelName of models) {
+          try {
+            this.model = ai.getGenerativeModel({ model: modelName });
+            console.log(`✅ Using model: ${modelName}`);
+            modelInitialized = true;
+            break;
+          } catch (e) {
+            console.log(`⚠️ Model ${modelName} not available, trying next...`);
+          }
+        }
+        
+        if (!modelInitialized) {
+          throw new Error('No compatible Gemini model available. Please check your API key.');
+        }
+      }
+
       const analysisPrompt = `Please analyze the following government document and provide a clear explanation:
 
 Document Name: ${fileName}

@@ -135,11 +135,16 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
       isNavigation = true;
       onVoiceCommand?.(commandType, selectedLanguage.code);
     } else {
-      // General query - use Gemini AI for intelligent response
+      // General query - use Gemini AI for intelligent response (AGENTIC MODE)
       try {
+        setIsListening(false); // Stop listening while processing
         response = await civicCompanion.sendMessage(command);
-      } catch (error) {
-        response = getTranslatedResponse('Let me help you with that', selectedLanguage.code);
+        if (!response || response.trim().length === 0) {
+          response = 'I am processing your request. Please ask again.';
+        }
+      } catch (error: any) {
+        console.error('Voice AI error:', error);
+        response = `I encountered an error: ${error.message}. Please try again.`;
       }
       commandType = `query:${command}`;
       onVoiceCommand?.(commandType, selectedLanguage.code);
@@ -154,7 +159,7 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
         setTranscript('');
         recognitionRef.current?.start();
         setIsListening(true);
-      }, 2000);
+      }, response.length * 50 + 1000); // Wait for speech to finish
     }
   };
 
