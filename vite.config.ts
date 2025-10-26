@@ -56,7 +56,24 @@
       outDir: 'build',
     },
     server: {
-      port: 3000,
+      port: 5173,
       open: true,
+      proxy: {
+        '/api/gemini': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/gemini/, '/api/gemini'),
+        },
+        '/api/openai': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/openai/, '/api/openai'),
+        },
+        '/api/groq': {
+          target: 'http://localhost:3001',
+          changeOrigin: true,
+          rewrite: (path) => path.replace(/^\/api\/groq/, '/api/groq'),
+        },
+      },
     },
   });

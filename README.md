@@ -1,204 +1,249 @@
-# 🏛️ Civic-Tech AI Assistant
+# 🇮🇳 **JanAI – Generative AI Assistant for Civic Access**
 
-An intelligent, agentic AI assistant powered by **Google Gemini** to help Indian citizens navigate government services, schemes, and civic procedures.
+> **Empowering Every Citizen Through Voice-First AI**  
+> _Built for Digital India • Inclusive • Intelligent • Accessible_
 
-**Original Design:** https://www.figma.com/design/stPIwbhtbIYLB3K0djkfzV/Civic-Tech-AI-Assistant
+![JanAI Banner](https://github.com/theshubhamgundu/hackathon-oct-2025/blob/main/assets/janAi.jpg)
 
----
-
-## ✨ Features
-
-### 🤖 Full Agentic Mode
-- **Intelligent Chat** - Ask anything about government services, schemes, and procedures
-- **Document Analysis** - Upload PDFs, DOCX, or TXT files and get AI-powered explanations
-- **Multi-turn Conversations** - Maintains context across multiple messages
-- **No Rules-Based Responses** - All responses powered by Gemini AI
-
-### 🎤 Voice Assistant
-- **Multi-language Support** - 10 Indian languages (English, Hindi, Tamil, Telugu, Bengali, Marathi, Gujarati, Kannada, Malayalam, Punjabi)
-- **Real-time Voice Responses** - Speak and get voice responses in your language
-- **Continuous Conversation** - Agent listens for follow-up questions
-- **Language Switching** - Change language anytime
-
-### 📄 Document Processing
-- **PDF Extraction** - Extract text from PDF files
-- **DOCX Support** - Parse Word documents
-- **Text Files** - Direct text file analysis
-- **Intelligent Analysis** - AI explains documents clearly
+[![License](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
+[![Status](https://img.shields.io/badge/status-hackathon-orange.svg)]()
+[![AI](https://img.shields.io/badge/AI-LLaMA%203.3%20%2B%20RAG-green.svg)]()
 
 ---
 
-## 🚀 Quick Start
+## 📋 Table of Contents
 
-### 1. Install Dependencies
+- [Problem Statement](#-problem-statement)
+- [Solution Overview](#-solution-overview)
+- [Key Features](#-key-features)
+- [Technical Architecture](#-technical-architecture)
+- [Technology Stack](#-technology-stack)
+- [User Journey](#-user-journey)
+- [Security & Privacy](#-security--privacy)
+- [Innovation Highlights](#-innovation-highlights)
+- [Impact Metrics](#-impact-metrics)
+- [Team](#-team)
+- [Installation](#-installation)
+
+---
+
+## 🚨 Problem Statement
+
+India’s e-governance revolution is rapidly expanding — but **digital accessibility** remains a major challenge:
+
+- **150M+ senior citizens** struggle with digital portals  
+- **Low-literate users** can’t navigate forms or legal jargon  
+- **Privacy concerns** when sharing documents via WhatsApp  
+- **Language barriers** exclude non-English speakers  
+- **Lack of human-like help** in local languages  
+
+> **Core Challenge:**  
+> How can we use Generative AI to help every citizen — even those who can’t read or type — access government schemes, documents, and services independently?
+
+---
+
+## 💡 Solution Overview
+
+**JanAI** is a **voice-first, multilingual Generative AI assistant** designed to make government services simple, secure, and human-like.
+
+With **speech, vision, and intelligent retrieval**, JanAI can:
+- Explain official documents  
+- Help apply for schemes  
+- Answer civic questions  
+- Guide users step-by-step — all through voice or chat  
+
+### Vision
+
+> “AI that speaks your language and understands your world.”  
+
+Our mission is to make government access **as easy as talking to a friend** — no typing, no confusion, just help.
+
+### Target Users
+
+- Senior citizens (65+)
+- Low-literate & rural citizens
+- Non-English speakers
+- Visually impaired users
+- Citizens with digital anxiety
+
+---
+
+## ✨ Key Features
+
+| Category | Feature | Description |
+|----------|----------|-------------|
+| 🧠 **Conversational AI** | **Civic Query Assistant** | Chatbot powered by LLaMA 3.3 (Groq) for scheme help, FAQs & government queries |
+| 🗂 **Scheme Finder** | **AI-based Scheme Discovery** | Finds eligible central/state schemes based on location & profile |
+| 🧾 **Document Simplifier** | **Gov Doc Summarizer** | Simplifies and explains complex government forms or circulars |
+| 🧮 **Scheme Comparator** | **Compare Schemes Side-by-Side** | Shows benefits, eligibility & documents required |
+| 📍 **Geo-Intelligence** | **Location-Aware Schemes** | Suggests schemes available in your state, district, or mandal |
+| 🔊 **Voice & Accessibility** | **Voice-first Interface** | Multilingual STT + TTS + emoji-aided interface for seniors |
+| 📷 **OCR + AI Understanding** | **Document Reader** | Reads scanned documents or PDFs using OCR + summarization |
+| 🧠 **Concise Response Engine** | **Token-Efficient Replies** | Automatically generates short, precise answers (uses 40% fewer tokens) |
+| 💬 **Context Memory** | **Conversation Retention** | Remembers chat context for follow-up questions |
+| 🧩 **API Integration** | **Groq + RAG Backend** | Uses Groq API with LLaMA 3.3 for ultra-fast reasoning |
+| 🔐 **Privacy First** | **Secure Data Handling** | No sensitive data stored — all ephemeral requests |
+
+---
+
+## 🏗 Technical Architecture
+
+┌────────────────────────────────────────────┐
+│ JanAI Client (React) │
+│ • Voice & Chat UI │
+│ • Simple, Large Touch Interface │
+│ • Localized in 12+ Indian languages │
+└────────────────────┬───────────────────────┘
+│
+▼
+┌────────────────────────────────────────────┐
+│ Node.js Backend (API Gateway) │
+│ • Routes AI, Speech, and Gov API requests │
+│ • Proxy for Groq API (LLaMA 3.3) │
+│ • Token limiter + Response optimizer │
+└────────────────────┬───────────────────────┘
+│
+▼
+┌────────────────────────────────────────────┐
+│ AI Pipeline (RAG + LLaMA) │
+│ • Groq LLaMA 3.3 (70B Versatile) │
+│ • Retrieval Augmented Generation (RAG) │
+│ • Document Simplification Engine │
+│ • Scheme Discovery Logic │
+└────────────────────┬───────────────────────┘
+│
+▼
+┌────────────────────────────────────────────┐
+│ Vector & Gov Data Layer │
+│ • Supabase + pgvector for embeddings │
+│ • Indexed government documents │
+│ • Scheme catalog by state/district │
+└────────────────────────────────────────────┘
+
+
+
+---
+
+## 🛠 Technology Stack
+
+| Layer | Technology | Purpose |
+|-------|-------------|---------|
+| **Frontend** | React / Flutter | Voice & Chat UI |
+| **Backend** | Node.js + Express | API orchestration layer |
+| **AI Engine** | Groq (LLaMA 3.3-70B) | Conversational & reasoning model |
+| **RAG Layer** | LangChain + Supabase | Grounded document retrieval |
+| **Speech** | Whisper STT + Google TTS | Voice input/output |
+| **OCR** | Tesseract / Google Vision | Document scanning |
+| **Auth** | OTP + Firebase | Secure login |
+| **Hosting** | Render / Vercel | Serverless deployment |
+| **Monitoring** | Sentry | Error tracking |
+
+---
+
+## 👤 User Journey Example
+
+### Senior Citizen Applying for a Ration Card
+
+1️⃣ Open JanAI app
+2️⃣ Say “I want a new ration card”
+3️⃣ AI explains the process in simple Hindi
+4️⃣ Guides user step-by-step:
+• Check eligibility
+• Upload required documents
+• Submit online/offline
+5️⃣ Reads aloud confirmation:
+“Your ration card application is submitted.
+You’ll get an SMS when it’s verified.”
+
+
+> **Result:** A citizen applies independently — no agent, no confusion.
+
+---
+
+## 🔐 Security & Privacy
+
+| Principle | Implementation |
+|------------|----------------|
+| **Zero Data Retention** | No personal data stored or logged |
+| **End-to-End Encryption** | AES-256 encrypted request flow |
+| **Consent-Based Access** | User permission required before fetching data |
+| **Audit & Transparency** | All actions traceable for review |
+| **Privacy by Design** | No third-party data sharing |
+| **Voice Privacy** | Speech processed on-device where possible |
+
+---
+
+## 🌟 Innovation Highlights
+
+### 🧩 1. Concise AI Engine
+- Uses custom system prompts to keep responses short and token-efficient  
+- Dynamic truncation ensures replies <150 words  
+
+### 🧠 2. Government-Verified RAG
+- All answers grounded in official govt data sources  
+- Source citations prevent misinformation  
+
+### 🗣 3. Accessibility-First UI
+- Large icons, bilingual text, and voice interaction  
+- Especially designed for elderly & low-literate citizens  
+
+### ⚙️ 4. Fast LLM Inference via Groq
+- LLaMA 3.3 on Groq gives sub-second responses  
+- No latency, ideal for conversational interfaces  
+
+### 💬 5. Local Language Intelligence
+- Handles Hindi-English mix seamlessly  
+- Translates state schemes into the user’s native language  
+
+---
+
+## 📊 Impact Metrics (Projected)
+
+| Metric | Target |
+|--------|--------|
+| Citizens Reached | 1 Million+ |
+| Avg. Query Time | < 2 seconds |
+| Govt Scheme Discovery Rate | +60% |
+| Elderly Adoption | 100K users in 6 months |
+| Language Support | 22 Indian languages |
+| Cost Reduction | 70% lower than intermediaries |
+
+---
+
+## 👥 Team JanAI
+
+| Member | Role | GitHub |
+|--------|------|--------|
+| 🧑‍💻 **Shubham Gundu** | Full Stack & AI Integration | [@theshubhamgundu](https://github.com/theshubhamgundu) |
+| 🧠 **Pranay Kumar Goli** | Backend & RAG Systems | [@golipranaykumar](https://github.com/golipranaykumar) |
+| 🎨 **Rahul Guguloth** | UI/UX & Voice Experience | [@Rahulguguloth](https://github.com/Rahulguguloth) |
+| ☁️ **Yash Yashwanth** | Cloud, DevOps & Security | [@yash-yashwanth](https://github.com/yash-yashwanth) |
+
+---
+
+## ⚙️ Installation & Setup
+
 ```bash
+# Clone the repo
+git clone https://github.com/theshubhamgundu/janai.git
+
+# Navigate to backend
+cd janai/backend
+
+# Install dependencies
 npm install
-```
 
-### 2. Set Up Gemini API Key
-See [SETUP_GEMINI_API.md](./SETUP_GEMINI_API.md) for detailed instructions.
+# Add your environment variables
+cp .env.example .env
+# (Include GROQ_API_KEY, SUPABASE_URL, SUPABASE_KEY, etc.)
 
-Quick version:
-```bash
-# Create .env.local file
-echo "VITE_GEMINI_API_KEY=your_api_key_here" > .env.local
-```
-
-Get your free API key from: https://makersuite.google.com/app/apikey
-
-### 3. Start Development Server
-```bash
+# Run backend
 npm run dev
-```
 
-The app will be available at `http://localhost:5173`
+# Access API
+http://localhost:3001
 
----
+💖 Built with Passion for Digital India
 
-## 📋 Project Structure
-
-```
-src/
-├── components/
-│   ├── CivicCompanion.tsx       # Main chat interface (Agentic)
-│   ├── VoiceAssistant.tsx       # Voice mode with Gemini AI
-│   └── ...other components
-├── utils/
-│   ├── geminiService.ts         # Gemini AI integration
-│   ├── fileProcessor.ts         # Document processing
-│   └── ...other utilities
-└── ...other files
-```
-
----
-
-## 🔧 Key Technologies
-
-- **Frontend:** React + TypeScript + Vite
-- **AI:** Google Generative AI (Gemini Pro)
-- **Voice:** Web Speech API
-- **Document Processing:** PDF.js, Mammoth.js
-- **UI:** Tailwind CSS + shadcn/ui
-
----
-
-## 📖 Usage Examples
-
-### Chat Mode
-```
-User: "How do I apply for Aadhaar?"
-AI: [Provides step-by-step guidance on Aadhaar application]
-
-User: "What documents do I need?"
-AI: [Continues conversation with relevant information]
-```
-
-### Voice Mode
-```
-User: Speaks "Tell me about PAN card"
-AI: Responds with voice explanation in selected language
-User: Speaks follow-up question
-AI: Continues conversation with voice response
-```
-
-### Document Analysis
-```
-User: Uploads "Aadhaar_Guide.pdf"
-AI: Analyzes and explains the document
-    - What it's about
-    - Key information
-    - Next steps
-    - Related services
-```
-
----
-
-## 🔐 Security
-
-- API keys are stored in `.env.local` (not committed to Git)
-- `.gitignore` prevents sensitive files from being uploaded
-- See `.env.example` for configuration format
-
----
-
-## 📚 Documentation
-
-- **[SETUP_GEMINI_API.md](./SETUP_GEMINI_API.md)** - Detailed API setup guide
-- **[AGENTIC_MODE_GUIDE.md](./AGENTIC_MODE_GUIDE.md)** - Features and architecture
-- **[QUICK_START_FILE_UPLOAD.md](./QUICK_START_FILE_UPLOAD.md)** - File upload testing
-
----
-
-## 🐛 Troubleshooting
-
-### "API key not valid" Error
-1. Check your API key is correct
-2. Verify it starts with `AIza`
-3. Generate a new key if needed
-4. See [SETUP_GEMINI_API.md](./SETUP_GEMINI_API.md)
-
-### Voice Not Working
-1. Check browser microphone permissions
-2. Use Chrome or Edge browser
-3. Verify API key is set
-4. Check browser console for errors
-
-### PDF Upload Fails
-1. Ensure file is not corrupted
-2. Try a different PDF file
-3. Check file size (should be reasonable)
-4. Check browser console for errors
-
----
-
-## 📝 Environment Variables
-
-Create `.env.local` with:
-```
-VITE_GEMINI_API_KEY=your_api_key_here
-VITE_SUPABASE_URL=optional_supabase_url
-VITE_SUPABASE_ANON_KEY=optional_supabase_key
-```
-
----
-
-## 🎯 Supported Languages
-
-Voice and chat support for:
-- English
-- Hindi (हिन्दी)
-- Tamil (தமிழ்)
-- Telugu (తెలుగు)
-- Bengali (বাংলা)
-- Marathi (मराठी)
-- Gujarati (ગુજરાતી)
-- Kannada (ಕನ್ನಡ)
-- Malayalam (മലയാളം)
-- Punjabi (ਪੰਜਾਬੀ)
-
----
-
-## 📞 Support
-
-For issues or questions:
-1. Check the documentation files
-2. Review browser console for errors
-3. Verify API key setup
-4. Check internet connection
-
----
-
-## 📄 License
-
-This project is part of the Civic-Tech AI Assistant initiative.
-
----
-
-## 🙏 Acknowledgments
-
-Built with:
-- Google Generative AI (Gemini)
-- React & TypeScript
-- Tailwind CSS & shadcn/ui
-- Community contributions
-  
+Making government access simple, secure, and human for everyone.
+“Because every citizen deserves a voice in the digital era.”
