@@ -270,6 +270,83 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
     return translations[langCode]?.[text] || text;
   };
 
+  const speak = async (text: string) => {
+    if (!synthRef.current) return;
+
+    // Cancel any ongoing speech
+    synthRef.current.cancel();
+
+    // Ensure voices are loaded
+    let voices = synthRef.current.getVoices();
+    if (voices.length === 0) {
+      // If voices aren't loaded yet, wait for them to load
+      await new Promise<void>((resolve) => {
+        const onVoicesChanged = () => {
+          voices = synthRef.current?.getVoices() || [];
+          if (voices.length > 0) {
+            synthRef.current?.removeEventListener('voiceschanged', onVoicesChanged);
+            resolve();
+          }
+        };
+        synthRef.current?.addEventListener('voiceschanged', onVoicesChanged);
+        // Some browsers don't fire the voiceschanged event, so set a timeout
+        setTimeout(resolve, 1000);
+      });
+      voices = synthRef.current?.getVoices() || [];
+    }
+
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.lang = selectedLanguage.speechCode;
+    utterance.rate = 0.9;
+    utterance.pitch = 1;
+    utterance.volume = 1;
+
+    // Try to find a voice that matches the selected language
+    const languageCode = selectedLanguage.code.toLowerCase();
+    const speechCode = selectedLanguage.speechCode.toLowerCase();
+    
+    // First try exact match with speech code (e.g., 'te-IN')
+    let preferredVoice = voices.find(voice => 
+      voice.lang.toLowerCase() === speechCode
+    );
+
+    // If not found, try matching just the language code (e.g., 'te')
+    if (!preferredVoice) {
+      preferredVoice = voices.find(voice => 
+        voice.lang.toLowerCase().startsWith(languageCode + '-') ||
+        voice.lang.toLowerCase() === languageCode
+      );
+    }
+
+    // If still not found, try any voice that includes the language code
+    if (!preferredVoice) {
+      preferredVoice = voices.find(voice => 
+        voice.lang.toLowerCase().includes(languageCode)
+      );
+    }
+
+    // If we found a matching voice, use it
+    if (preferredVoice) {
+      utterance.voice = preferredVoice;
+      console.log('Using voice:', preferredVoice.name, 'for language:', preferredVoice.lang);
+    } else {
+      console.warn('No matching voice found for language:', selectedLanguage.name, 
+                  'Using default voice for:', utterance.lang);
+    }
+
+    utterance.onend = () => {
+      setIsSpeaking(false);
+    };
+
+    utterance.onerror = (event) => {
+      console.error('Speech synthesis error:', event);
+      setIsSpeaking(false);
+    };
+
+    setIsSpeaking(true);
+    synthRef.current.speak(utterance);
+  };
+
   const toggleListening = () => {
     if (isListening) {
       recognitionRef.current?.stop();
@@ -281,22 +358,17 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
     }
   };
 
-  const speak = (text: string) => {
-    if (!synthRef.current) return;
-
-    // Cancel any ongoing speech
-    synthRef.current.cancel();
-
-    const utterance = new SpeechSynthesisUtterance(text);
-    utterance.lang = selectedLanguage.speechCode;
-    utterance.rate = 0.9;
-    utterance.pitch = 1;
-
-    utterance.onstart = () => setIsSpeaking(true);
-    utterance.onend = () => setIsSpeaking(false);
-    utterance.onerror = () => setIsSpeaking(false);
-
-    synthRef.current.speak(utterance);
+  const handleLanguageChange = (langCode: string) => {
+    const language = SUPPORTED_LANGUAGES.find(lang => lang.code === langCode) || SUPPORTED_LANGUAGES[0];
+    setSelectedLanguage(language);
+    
+    if (recognitionRef.current) {
+      recognitionRef.current.lang = language.speechCode;
+    }
+    
+    // Announce language change in the new language
+    const changeMessage = getTranslatedResponse('Language changed to', language.code);
+    speak(`${changeMessage} ${language.nativeName}`);
   };
 
   const toggleSpeech = () => {
@@ -304,22 +376,9 @@ export function VoiceAssistant({ onVoiceCommand, currentScreen }: VoiceAssistant
       synthRef.current?.cancel();
       setIsSpeaking(false);
     } else if (lastCommand) {
-      speak(`You said: ${lastCommand}`);
+      speak(lastCommand);
     }
   };
-
-  const handleLanguageChange = (langCode: string) => {
-    const language = SUPPORTED_LANGUAGES.find(l => l.code === langCode);
-    if (language) {
-      setSelectedLanguage(language);
-      if (recognitionRef.current) {
-        recognitionRef.current.lang = language.speechCode;
-      }
-      
-      // Announce language change in the new language
-      const changeMessage = getTranslatedResponse('Language changed to', langCode);
-      speak(`${changeMessage} ${language.nativeName}`);
-    }
   };
 
   if (!isSupported) {
