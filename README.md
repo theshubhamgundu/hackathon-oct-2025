@@ -19,7 +19,6 @@
 - [Technical Architecture](#-technical-architecture)
 - [Technology Stack](#-technology-stack)
 - [User Journey](#-user-journey)
-- [Security & Privacy](#-security--privacy)
 - [Innovation Highlights](#-innovation-highlights)
 - [Impact Metrics](#-impact-metrics)
 - [Team](#-team)
@@ -128,15 +127,13 @@ Our mission is to make government access **as easy as talking to a friend** — 
 
 | Layer | Technology | Purpose |
 |-------|-------------|---------|
-| **Frontend** | React / Flutter | Voice & Chat UI |
+| **Frontend** | React | Voice & Chat UI |
 | **Backend** | Node.js + Express | API orchestration layer |
 | **AI Engine** | Groq (LLaMA 3.3-70B) | Conversational & reasoning model |
-| **RAG Layer** | LangChain + Supabase | Grounded document retrieval |
-| **Speech** | Whisper STT + Google TTS | Voice input/output |
+| **Speech** | Grok TTS | Voice input/output |
 | **OCR** | Tesseract / Google Vision | Document scanning |
-| **Auth** | OTP + Firebase | Secure login |
-| **Hosting** | Render / Vercel | Serverless deployment |
-| **Monitoring** | Sentry | Error tracking |
+| **Auth** | OTP + supabase | Secure login |
+| **Hosting** | Vercel  |
 
 ---
 
@@ -160,18 +157,6 @@ You’ll get an SMS when it’s verified.”
 
 ---
 
-## 🔐 Security & Privacy
-
-| Principle | Implementation |
-|------------|----------------|
-| **Zero Data Retention** | No personal data stored or logged |
-| **End-to-End Encryption** | AES-256 encrypted request flow |
-| **Consent-Based Access** | User permission required before fetching data |
-| **Audit & Transparency** | All actions traceable for review |
-| **Privacy by Design** | No third-party data sharing |
-| **Voice Privacy** | Speech processed on-device where possible |
-
----
 
 ## 🌟 Innovation Highlights
 
