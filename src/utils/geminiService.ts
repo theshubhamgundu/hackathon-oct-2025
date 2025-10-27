@@ -12,8 +12,14 @@ const initializeGroq = (): string => {
   GROQ_API_KEY = (import.meta.env?.VITE_GROQ_API_KEY || '').trim();
   if (!GROQ_API_KEY) {
     const userKey = prompt('Enter your Groq API key (starts with gsk_)');
-    if (!userKey) throw new Error('Groq API key required.');
+    if (!userKey?.trim() || !userKey.startsWith('gsk_')) {
+      throw new Error('Valid Groq API key required (should start with gsk_)');
+    }
     GROQ_API_KEY = userKey.trim();
+  }
+
+  if (!GROQ_API_KEY.startsWith('gsk_')) {
+    throw new Error('Invalid Groq API key format. Key should start with gsk_');
   }
 
   console.log('✅ Groq API key initialized');
@@ -33,7 +39,10 @@ const estimateTokens = (text: string): number => {
 // ==========================
 const callGroq = async (prompt: string, retries = 3): Promise<string> => {
   try {
-    initializeGroq();
+    const apiKey = initializeGroq();
+    if (!apiKey) {
+      throw new Error('Failed to initialize Groq API key');
+    }
 
     const tokenCount = estimateTokens(prompt);
     const MAX_SAFE_TOKENS = 3500; // soft limit per call to stay below 12k TPM
@@ -42,13 +51,21 @@ const callGroq = async (prompt: string, retries = 3): Promise<string> => {
       prompt = prompt.slice(0, MAX_SAFE_TOKENS * 4); // trim chars safely
     }
 
+    console.log('🚀 Sending request to Groq API...');
     const response = await fetch('/api/groq/generate', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 
+        'Content-Type': 'application/json',
+        'Authorization': `Bearer ${apiKey}`
+      },
       body: JSON.stringify({
-        prompt,
-        max_tokens: 512, // limit AI response
+        messages: [{
+          role: 'user',
+          content: prompt
+        }],
+        max_tokens: 512,
         temperature: 0.7,
+        model: 'llama-3.3-70b-versatile'
       }),
     });
 
